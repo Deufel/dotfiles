@@ -10,6 +10,12 @@ git clone git@github.com:Deufel/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 stow hypr bash ssh bin
 
+## Adding a new config file
+cp ~/.config/path/to/file ~/dotfiles/package/.config/path/to/file
+rm ~/.config/path/to/file
+stow --dir=/home/mike/dotfiles --target=/home/mike package
+git add . && git commit -m "add filename"
+
 ## Contents
 - `hypr/` — Hyprland config (monitors, bindings, looknfeel, input, autostart)
 - `bash/` — .bashrc additions, PATH, SSH agent
