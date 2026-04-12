@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "── SSH Keys ──────────────────"
+ls -la ~/.ssh/ | grep -v "^total\|^\.\.$\|^\.$"
+
+echo "\n── Loaded in Agent ───────────"
+ssh-add -l 2>/dev/null || echo "No keys loaded / agent not running"
+
+echo "\n── Config ────────────────────"
+cat ~/.ssh/config
