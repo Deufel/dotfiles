@@ -1,0 +1,14 @@
+# editor
+*.swp
+*.swo
+.nvim/
+
+# os
+.DS_Store
+
+# secrets (safety net)
+*.env
+*.pem
+*.key
+id_*
+!id_*.pub
