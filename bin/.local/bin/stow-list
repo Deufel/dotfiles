@@ -1,48 +1,41 @@
 #!/bin/bash
+# Show all stow-managed symlinks, grouped by package, with git status.
 
-DOTFILES=~/dotfiles
-TARGET=$HOME
+dotfiles=~/dotfiles
+symlinks=()
+
+# cache symlinks once
+while IFS= read -r l; do
+  symlinks+=("$l")
+done < <(find "$HOME" -maxdepth 5 -type l 2>/dev/null)
 
 echo "── dotfiles ──────────────────────────"
 
-TOTAL=0
-while IFS= read -r PACKAGE; do
-  PACKAGE_NAME=$(basename "$PACKAGE")
-  COUNT=0
-  EXAMPLE=""
-  while IFS= read -r l; do
-    dest=$(readlink "$l")
-    if [[ "$dest" == *"dotfiles/$PACKAGE_NAME"* ]]; then
-      COUNT=$((COUNT + 1))
-      if [ -z "$EXAMPLE" ]; then
-        RELATIVE=$(echo "$l" | sed "s|$HOME/||")
-        if [[ "$RELATIVE" != *"/"* ]]; then
-          EXAMPLE="$RELATIVE"
-        else
-          EXAMPLE="$(dirname "$RELATIVE")/"
-        fi
-      fi
+total=0
+while IFS= read -r pkg_path; do
+  pkg=$(basename "$pkg_path")
+  count=0
+  example=""
+
+  for link in "${symlinks[@]}"; do
+    [[ $(readlink "$link") != *"dotfiles/$pkg"* ]] && continue
+    count=$((count + 1))
+    if [ -z "$example" ]; then
+      rel=${link/#$HOME\//}
+      [[ "$rel" == */* ]] && example="$(dirname "$rel")/" || example="$rel"
     fi
-  done < <(find "$TARGET" -maxdepth 5 -type l 2>/dev/null)
+  done
 
-  if [ "$COUNT" -gt 0 ]; then
-    printf "  %-8s %-4s %s\n" "$PACKAGE_NAME" "$COUNT" "$EXAMPLE"
-    TOTAL=$((TOTAL + COUNT))
-  fi
-done < <(find "$DOTFILES" -maxdepth 1 -mindepth 1 -type d)
+  [ "$count" -eq 0 ] && continue
+  printf "  %-10s %-4s %s\n" "$pkg" "$count" "$example"
+  total=$((total + count))
+done < <(find "$dotfiles" -maxdepth 1 -mindepth 1 -type d)
 
-BROKEN=$(find "$TARGET" -maxdepth 5 -type l ! -e 2>/dev/null | wc -l)
-echo "─────────────────────────── $TOTAL links"
+broken=$(find "$HOME" -maxdepth 5 -type l ! -e 2>/dev/null | wc -l | tr -d ' ')
+echo "─────────────────────────── $total links"
+[ "$broken" -gt 0 ] && echo "⚠  $broken broken symlinks" >&2
 
-GIT_BRANCH=$(git -C "$DOTFILES" branch --show-current 2>/dev/null)
-GIT_STATUS=$(git -C "$DOTFILES" status --porcelain 2>/dev/null)
-if [ -z "$GIT_STATUS" ]; then
-  GIT_STATE="✓ clean"
-else
-  GIT_STATE="✗ uncommitted changes"
-fi
-
-if [ "$BROKEN" -gt 0 ]; then
-  echo "⚠ $BROKEN broken"
-fi
-echo "~/dotfiles  $GIT_BRANCH  $GIT_STATE"
+git_branch=$(git -C "$dotfiles" branch --show-current 2>/dev/null)
+git_clean=$(git -C "$dotfiles" status --porcelain 2>/dev/null)
+[ -z "$git_clean" ] && git_state="✓ clean" || git_state="✗ uncommitted changes"
+echo "~/dotfiles  $git_branch  $git_state"

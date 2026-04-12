@@ -1,21 +1,22 @@
 #!/bin/bash
-# Usage: stow-add <package> <file-path>
-# Example: stow-add hypr ~/.config/hypr/hypridle.conf
 
-PACKAGE=${1%/} # strip trailing slash
-FILE=$2
-DOTFILES=~/dotfiles
-
-if [ -z "$PACKAGE" ] || [ -z "$FILE" ]; then
-  echo "Usage: stow-add <package> <file-path>"
+usage() {
+  echo "usage: stow-add <package> <file>"
   exit 1
-fi
+}
 
-RELATIVE=${FILE/#$HOME/}
-RELATIVE=${RELATIVE#/}
-mkdir -p "$DOTFILES/$PACKAGE/$(dirname $RELATIVE)"
-cp "$FILE" "$DOTFILES/$PACKAGE/$RELATIVE"
-rm "$FILE"
-stow $PACKAGE
+[ -z "$1" ] && usage
+[ -z "$2" ] && usage
+[ ! -f "$2" ] && echo "✗ not found: $2" && exit 1
+[ -L "$2" ] && echo "✗ already stowed: $2" && exit 1
 
-echo "✓ $FILE → $DOTFILES/$PACKAGE/$RELATIVE"
+pkg=${1%/}
+file=$2
+rel=${file/#$HOME\//}
+
+mkdir -p ~/dotfiles/$pkg/$(dirname $rel)
+cp "$file" ~/dotfiles/$pkg/$rel
+rm "$file"
+stow $pkg
+
+echo "✓ $file → ~/dotfiles/$pkg/$rel"
