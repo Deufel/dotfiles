@@ -1,22 +1,35 @@
 #!/bin/bash
+# Move a file or directory into dotfiles and symlink it back.
 
 usage() {
-  echo "usage: stow-add <package> <file>"
+  echo "usage: stow-add <package> <path>"
   exit 1
 }
 
 [ -z "$1" ] && usage
 [ -z "$2" ] && usage
-[ ! -f "$2" ] && echo "✗ not found: $2" && exit 1
+[ ! -e "$2" ] && echo "✗ not found: $2" && exit 1
 [ -L "$2" ] && echo "✗ already stowed: $2" && exit 1
 
 pkg=${1%/}
-file=$2
-rel=${file/#$HOME\//}
+path=${2%/}
+rel=${path/#$HOME\//}
 
 mkdir -p ~/dotfiles/$pkg/$(dirname $rel)
-cp "$file" ~/dotfiles/$pkg/$rel
-rm "$file"
-stow $pkg
 
-echo "✓ $file → ~/dotfiles/$pkg/$rel"
+if [ -d "$path" ]; then
+  cp -r "$path" ~/dotfiles/$pkg/$rel || {
+    echo "✗ copy failed, aborting"
+    exit 1
+  }
+  rm -rf "$path"
+else
+  cp "$path" ~/dotfiles/$pkg/$rel || {
+    echo "✗ copy failed, aborting"
+    exit 1
+  }
+  rm "$path"
+fi
+
+stow $pkg
+echo "✓ $path → ~/dotfiles/$pkg/$rel"
