@@ -2,10 +2,7 @@
 # Bootstrap dotfiles on a fresh Omarchy/Arch install.
 # curl -fsSL https://raw.githubusercontent.com/Deufel/dotfiles/master/install.sh | sh
 
-DOTFILES=~/dotfiles
-REPO="git@github.com:Deufel/dotfiles.git"
-PACKAGES="hypr bash ssh bin stowrc nvim"
-BACKUP=~/.dotfiles-backup
+REPO="https://github.com/Deufel/dotfiles.git"
 
 fail() {
   echo "✗ $1" >&2
@@ -14,14 +11,9 @@ fail() {
 ok() { echo "✓ $1"; }
 info() { echo "→ $1"; }
 
-# check arch
-[ ! -f /etc/arch-release ] && fail "this script is for Arch Linux only"
-
-# check git
+# guards Not needed but does nto hurt i guess..
+[ ! -f /etc/arch-release ] && fail "Arch Linux only"
 command -v git &>/dev/null || fail "git is not installed"
-
-# check ssh key for github
-[ ! -f ~/.ssh/github ] && fail "no SSH key found at ~/.ssh/github — set up SSH first:\n  ssh-keygen -t ed25519 -C \"github\" -f ~/.ssh/github"
 
 # install stow if needed
 if ! command -v stow &>/dev/null; then
@@ -30,29 +22,27 @@ if ! command -v stow &>/dev/null; then
 fi
 ok "stow ready"
 
-# clone repo
-if [ -d "$DOTFILES" ]; then
-  info "~/dotfiles already exists, pulling latest"
-  git -C "$DOTFILES" pull || fail "could not pull dotfiles"
+# clone or update
+if [ -d ~/dotfiles ]; then
+  info "~/dotfiles exists, pulling latest"
+  git -C ~/dotfiles pull || fail "could not pull"
 else
   info "cloning dotfiles"
-  git clone "$REPO" "$DOTFILES" || fail "could not clone repo"
+  git clone "$REPO" ~/dotfiles || fail "could not clone"
 fi
-ok "dotfiles repo ready"
+ok "dotfiles ready"
 
-# backup and stow each package
-mkdir -p "$BACKUP"
-for pkg in $PACKAGES; do
-  info "stowing $pkg"
-  if ! stow --dir="$DOTFILES" --target="$HOME" "$pkg" 2>/dev/null; then
-    info "conflict in $pkg — backing up and retrying"
-    stow --dir="$DOTFILES" --target="$HOME" --adopt "$pkg" 2>/dev/null
-    # move adopted files to backup, restore dotfiles versions
-    git -C "$DOTFILES" checkout -- .
-    stow --dir="$DOTFILES" --target="$HOME" "$pkg" || fail "could not stow $pkg after backup"
+# stow all packages — derived from repo structure, no hardcoded list
+while IFS= read -r pkg_path; do
+  pkg=$(basename "$pkg_path")
+  if ! stow --dir=~/dotfiles --target="$HOME" "$pkg" 2>/dev/null; then
+    info "conflict in $pkg — adopting and restoring"
+    stow --dir=~/dotfiles --target="$HOME" --adopt "$pkg" 2>/dev/null
+    git -C ~/dotfiles checkout -- .
+    stow --dir=~/dotfiles --target="$HOME" "$pkg" || fail "could not stow $pkg"
   fi
   ok "stowed $pkg"
-done
+done < <(find ~/dotfiles -maxdepth 1 -mindepth 1 -type d -not -name ".git")
 
 # reload hyprland if running
 if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
@@ -61,10 +51,10 @@ if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
 fi
 
 echo ""
-echo "── done ──────────────────────────────"
-echo "── next steps ────────────────────────"
-echo "  SSH key:  ssh-keygen -t ed25519 -C \"github\" -f ~/.ssh/github"
-echo "            cat ~/.ssh/github.pub | wl-copy"
-echo "            # paste into github.com/settings/keys"
-echo "  Git:      git config --global user.name \"Mike Deufel\""
-echo "            git config --global user.email \"MDeufel13@gmail.com\""
+echo "── next steps (in order) ─────────────"
+echo "  1. ssh-keygen -t ed25519 -C \"github\" -f ~/.ssh/github"
+echo "     cat ~/.ssh/github.pub | wl-copy"
+echo "     # paste into github.com/settings/keys"
+echo "  2. git config --global user.name \"Mike Deufel\""
+echo "     git config --global user.email \"MDeufel13@gmail.com\""
+echo "  3. cd ~/dotfiles && git fetch"
