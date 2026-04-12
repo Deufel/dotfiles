@@ -1,0 +1,10 @@
+dotnet-runtime-9.0-bin
+opencode-bin
+python-terminaltexteffects
+ttf-ia-writer
+typora
+ufw-docker
+wayfreeze-git
+xdg-terminal-exec
+yaru-icon-theme
+yay

@@ -1,0 +1,6 @@
+[Unit]
+Description=Save dotfiles package list
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/dotfiles-save
