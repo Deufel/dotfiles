@@ -12,3 +12,9 @@ source ~/.local/share/omarchy/default/bash/rc
 
 # PATH additions
 source $HOME/.local/bin/env
+
+# Load SSH key into agent
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  eval "$(ssh-agent -s)" >/dev/null
+fi
+ssh-add ~/.ssh/github 2>/dev/null
