@@ -1,0 +1,48 @@
+#!/bin/bash
+
+DOTFILES=~/dotfiles
+TARGET=$HOME
+
+echo "── dotfiles ──────────────────────────"
+
+TOTAL=0
+while IFS= read -r PACKAGE; do
+  PACKAGE_NAME=$(basename "$PACKAGE")
+  COUNT=0
+  EXAMPLE=""
+  while IFS= read -r l; do
+    dest=$(readlink "$l")
+    if [[ "$dest" == *"dotfiles/$PACKAGE_NAME"* ]]; then
+      COUNT=$((COUNT + 1))
+      if [ -z "$EXAMPLE" ]; then
+        RELATIVE=$(echo "$l" | sed "s|$HOME/||")
+        if [[ "$RELATIVE" != *"/"* ]]; then
+          EXAMPLE="$RELATIVE"
+        else
+          EXAMPLE="$(dirname "$RELATIVE")/"
+        fi
+      fi
+    fi
+  done < <(find "$TARGET" -maxdepth 5 -type l 2>/dev/null)
+
+  if [ "$COUNT" -gt 0 ]; then
+    printf "  %-8s %-4s %s\n" "$PACKAGE_NAME" "$COUNT" "$EXAMPLE"
+    TOTAL=$((TOTAL + COUNT))
+  fi
+done < <(find "$DOTFILES" -maxdepth 1 -mindepth 1 -type d)
+
+BROKEN=$(find "$TARGET" -maxdepth 5 -type l ! -e 2>/dev/null | wc -l)
+echo "─────────────────────────── $TOTAL links"
+
+GIT_BRANCH=$(git -C "$DOTFILES" branch --show-current 2>/dev/null)
+GIT_STATUS=$(git -C "$DOTFILES" status --porcelain 2>/dev/null)
+if [ -z "$GIT_STATUS" ]; then
+  GIT_STATE="✓ clean"
+else
+  GIT_STATE="✗ uncommitted changes"
+fi
+
+if [ "$BROKEN" -gt 0 ]; then
+  echo "⚠ $BROKEN broken"
+fi
+echo "~/dotfiles  $GIT_BRANCH  $GIT_STATE"
