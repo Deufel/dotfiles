@@ -12,6 +12,7 @@ source ~/.local/share/omarchy/default/bash/rc
 
 # PATH additions
 source $HOME/.local/bin/env
+for f in ~/.secrets.d/*; do source "$f"; done
 
 # Load SSH key into agent
 if [ -z "$SSH_AUTH_SOCK" ]; then
