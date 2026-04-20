@@ -110,6 +110,7 @@ swaybg
 swayosd
 system-config-printer
 tldr
+tree
 tree-sitter-cli
 ttf-cascadia-mono-nerd
 ttf-jetbrains-mono-nerd
