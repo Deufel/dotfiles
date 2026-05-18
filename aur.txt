@@ -1,4 +1,5 @@
 dotnet-runtime-9.0-bin
+ngrok
 opencode-bin
 python-terminaltexteffects
 ttf-ia-writer
