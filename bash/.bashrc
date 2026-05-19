@@ -12,6 +12,7 @@ source ~/.local/share/omarchy/default/bash/rc
 
 # PATH additions
 source $HOME/.local/bin/env
+export PATH="$HOME/go/bin:$PATH"
 
 # Load SSH key into agent
 if [ -z "$SSH_AUTH_SOCK" ]; then
