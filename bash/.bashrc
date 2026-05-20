@@ -9,8 +9,7 @@ source ~/.local/share/omarchy/default/bash/rc
 #
 # Make an alias for invoking commands you use constantly
 # alias p='python'
-alias ls='eza --group-directories-first --sort=extension'
-alias ll='eza -l --group-directories-first --sort=extension'
+alias ll='eza -l --group-directories-first --sort=extension --ignore-glob="*_templ.go"'
 
 # PATH additions
 source $HOME/.local/bin/env
